@@ -12,6 +12,7 @@ public class TCPClient {
 
     public byte[] askServer(String hostname, int port) throws IOException {
 
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         // Pre-allocate byte buffers for receiving
         byte[] fromServerBuffer = new byte[BUFFERSIZE];
 
@@ -19,13 +20,22 @@ public class TCPClient {
 
         Socket clientSocket = new Socket(hostname, port);
 
-        int fromServerLength = clientSocket.getInputStream().read(fromServerBuffer);
+
+        InputStream input = clientSocket.getInputStream();
+
+        int bytesRead;
+
+        while((bytesRead = input.read(fromServerBuffer)) != -1){
+            byteArrayOutputStream.write(fromServerBuffer, 0, bytesRead);
+        }
+
 
         //System.out.write(fromServerBuffer, 0 , fromServerLength);
 
         clientSocket.close();
 
-        return fromServerBuffer;
+        return byteArrayOutputStream.toByteArray();
+
     }
 
     public byte[] askServer(String hostname, int port, byte [] toServerBytes) throws IOException {
@@ -33,6 +43,8 @@ public class TCPClient {
         if(toServerBytes.length == 0){
             return(askServer(hostname,port));
         }
+        //use dynamic output stream
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         // Pre-allocate byte buffers for receiving
         byte[] fromServerBuffer = new byte[BUFFERSIZE];
 
@@ -40,13 +52,23 @@ public class TCPClient {
 
         Socket clientSocket = new Socket(hostname, port);
 
-        clientSocket.getOutputStream().write(toServerBytes, 0, toServerBytes.length);
 
-        int fromServerLength = clientSocket.getInputStream().read(fromServerBuffer);
+        OutputStream output = clientSocket.getOutputStream();
+        //sends the data to the server
+        output.write(toServerBytes);
 
-        //System.out.write(fromServerBuffer, 0 , fromServerLength);
+        InputStream input = clientSocket.getInputStream();
 
+        int bytesRead;
+        //reads the input from the server's input stream and writes it to the
+        //dynamic aerray.
+        while((bytesRead = input.read(fromServerBuffer))!= -1){
+            byteArrayOutputStream.write(fromServerBuffer, 0, bytesRead);
+        }
         clientSocket.close();
-        return fromServerBuffer;
+        output.flush();
+        return byteArrayOutputStream.toByteArray();
+
+
     }
 }
