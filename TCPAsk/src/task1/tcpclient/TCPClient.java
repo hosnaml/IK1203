@@ -18,21 +18,16 @@ public class TCPClient {
 
         // TODO: Error handling
 
-        Socket clientSocket = new Socket(hostname, port);
+        try(Socket clientSocket = new Socket(hostname, port)){
+            InputStream input = clientSocket.getInputStream();
 
+            int bytesRead;
 
-        InputStream input = clientSocket.getInputStream();
+            while((bytesRead = input.read(fromServerBuffer)) != -1){
+                byteArrayOutputStream.write(fromServerBuffer, 0, bytesRead);
+            }
 
-        int bytesRead;
-
-        while((bytesRead = input.read(fromServerBuffer)) != -1){
-            byteArrayOutputStream.write(fromServerBuffer, 0, bytesRead);
         }
-
-
-        //System.out.write(fromServerBuffer, 0 , fromServerLength);
-
-        clientSocket.close();
 
         return byteArrayOutputStream.toByteArray();
 
@@ -50,23 +45,25 @@ public class TCPClient {
 
         // TODO: Error handling
 
-        Socket clientSocket = new Socket(hostname, port);
+        try(Socket clientSocket = new Socket(hostname, port)){
 
+            OutputStream output = clientSocket.getOutputStream();
+            //sends the data to the server
+            output.write(toServerBytes);
 
-        OutputStream output = clientSocket.getOutputStream();
-        //sends the data to the server
-        output.write(toServerBytes);
+            InputStream input = clientSocket.getInputStream();
 
-        InputStream input = clientSocket.getInputStream();
+            int bytesRead;
+            //reads the input from the server's input stream and writes it to the
+            //dynamic aerray.
+            while((bytesRead = input.read(fromServerBuffer))!= -1){
+                byteArrayOutputStream.write(fromServerBuffer, 0, bytesRead);
+            }
 
-        int bytesRead;
-        //reads the input from the server's input stream and writes it to the
-        //dynamic aerray.
-        while((bytesRead = input.read(fromServerBuffer))!= -1){
-            byteArrayOutputStream.write(fromServerBuffer, 0, bytesRead);
+            clientSocket.close();
+            output.flush();
         }
-        clientSocket.close();
-        output.flush();
+
         return byteArrayOutputStream.toByteArray();
 
 
