@@ -4,8 +4,6 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
-import tcpclient.TCPClient;
-
 import java.io.*;
 
 public class HTTPAsk {
@@ -18,7 +16,7 @@ public class HTTPAsk {
     String string = null;
     Integer timeout = null;
     Integer limit = null;
-    int port = 0;
+    int extPort = 0;
     byte[] toServerBytes = new byte[0];
     String httpResponseMethod = "HTTP/1.1 200 OK";
     String httpResponseBody = "";
@@ -42,7 +40,8 @@ public class HTTPAsk {
         // TODO: Parse the HTTP request to extract the parameters
             // You can use the String.split() method or the URL class to do this
             // Split by space to get the URL part, remove GET and HTTP/1.1
-            String [] parts = request.split(" ");
+            String line = request.split("Host:")[0];
+            String[] parts = line.split(" ");
             //method is the first one.
             method = parts[0];
             //version is the last one
@@ -50,7 +49,7 @@ public class HTTPAsk {
             // The URL part is the second element
             url = parts[1];
             // Split the URL by "?" to get the parameters
-            parts = url.split("?");
+            parts = url.split("\\?");
             // The first part is the path
             String path = parts[0];
             // The second part is the parameters
@@ -86,7 +85,7 @@ public class HTTPAsk {
                 if (key.equals("hostname")) {
                     hostname = value;
                 } else if (key.equals("port")) {
-                    port = Integer.parseInt(value);
+                    extPort = Integer.parseInt(value);
                 }
                 else if (key.equals("limit")) {
                     limit = Integer.parseInt(value);
@@ -110,71 +109,86 @@ public class HTTPAsk {
     public void run(int port) throws Exception {
         // Create a ServerSocket object to listen for client requests
         ServerSocket serverSocket = new ServerSocket(port);
+
+        System.out.println("Launching...");
+
         Socket clientSocket = serverSocket.accept();
+
+        System.out.println("Connected to client");
 
         // Create input and output streams
         BufferedReader input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
        
+        System.out.println("Marko!");
          
         // Read the HTTP request from the client using readLine() provided by BufferedReader.
-        String request = input.readLine();
-    
+        StringBuilder requestBuilder = new StringBuilder();
+        String inputLine;
+        while ((inputLine = input.readLine()) != null) {
+            requestBuilder.append(inputLine);
+        }
+        String request = requestBuilder.toString();
+
+        System.out.println("Polo!");
+
+        clientSocket.shutdownInput(); 
         
-        while (true) {
-           if(request.endsWith("\r\n\r\n"))
-                break;
-            request += input.readLine();
-        }
+        try{
+            parseHTTP(request, port);
+            TCPClient client = new TCPClient(shutdown, timeout,limit);
 
+            this.httpResponseBody = client.askServer(hostname, extPort, toServerBytes).toString();
 
-    clientSocket.shutdownInput(); 
-    
-    try{
-        parseHTTP(request, port);
-        TCPClient client = new TCPClient(shutdown, timeout,limit);
-        this.httpResponseMethod = "HTTP/1.1 200 OK";
-    } 
-    catch (Exception e) {
-        if (e instanceof SocketTimeoutException) {
-            System.out.println("Encountered SocketTimeoutException");
-            this.httpResponseMethod = "HTTP/1.1 408 Request Timeout";
-        } else if (e instanceof UnknownHostException) {
-            System.out.println("Encountered UnknownHostException");
-            this.httpResponseMethod = "HTTP/1.1 404 Not Found";
-        } else {
-            System.out.println("Encountered in unexpected error with message: " + e.getLocalizedMessage());
-            this.httpResponseMethod = "HTTP/1.1 400 Bad Request";
+            this.httpResponseMethod = "HTTP/1.1 200 OK";
+        } 
+        catch (Exception e) {
+            if (e instanceof SocketTimeoutException) {
+                System.out.println("Encountered SocketTimeoutException");
+                this.httpResponseMethod = "HTTP/1.1 408 Request Timeout";
+            } else if (e instanceof UnknownHostException) {
+                System.out.println("Encountered UnknownHostException");
+                this.httpResponseMethod = "HTTP/1.1 404 Not Found";
+            } else {
+                System.out.println("Encountered in unexpected error with message: " + e.getLocalizedMessage());
+                this.httpResponseMethod = "HTTP/1.1 400 Bad Request";
+            }
         }
-    }
-    
-    BufferedWriter output = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
-    PrintWriter writer = new PrintWriter(output, true);
-     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss O");
+        
+        BufferedWriter output = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+        PrintWriter writer = new PrintWriter(output, true);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss O");
         String httpDate = formatter.format(ZonedDateTime.now(ZoneOffset.UTC));
 
         String httpResponseMessage = String.format(
-"""
-%s
-Server: Ginga Ginga Pinga Pinga
-Content-Type: text/plain; charset=utf-8;
-Date: %s
-Keep-Alive: timeout=5, max=1000
-Connection: Keep-Alive
+                                    """
+                                    %s
+                                    Server: Prolog prolog prolog
+                                    Content-Type: text/plain; charset=utf-8;
+                                    Date: %s
+                                    Keep-Alive: timeout=5, max=1000
+                                    Connection: Keep-Alive
 
-%s
-""", httpResponseMethod, httpDate, httpResponseBody);
+                                    %s
+                                    """, httpResponseMethod, httpDate, httpResponseBody);
 
-        writer.println(httpResponseMessage);
-        clientSocket.shutdownOutput();
-        serverSocket.close();
+            writer.println(httpResponseMessage);
+            clientSocket.shutdownOutput();
+            serverSocket.close();
     
     }      // If the request is invalid, return a 400 Bad Request response with a suitable error message
     public static void main(String[] args) throws Exception {
         
-        int port = Integer.valueOf(args[0]);
+        int port;
+
+        if(args.length != 1){
+            port = 8888;
+        } else {
+            port = Integer.valueOf(args[0]);
+        }
+
         HTTPAsk server = new HTTPAsk();
         server.run(port);
-            
     }
     
 }
