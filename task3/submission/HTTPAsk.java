@@ -160,13 +160,16 @@ public class HTTPAsk {
 
             if (e instanceof SocketTimeoutException) { 
                 System.out.println("Socket timeout occurred, sending 408");
-                this.httpResponseMethod = "408 Timeout";
+                this.httpResponseMethod = "HTTP/1.1 408 Request Timeout";
+                //this.httpResponseBody = "HTTP/1.1 408 Request Timeout";
             } else if (e instanceof UnknownHostException) {
                 System.out.println("Encountered UnknownHostException");
                 this.httpResponseMethod = "HTTP/1.1 404 Not Found";
+                //this.httpResponseBody = "HTTP/1.1 404 Not Found";
             } else if (e instanceof BadRequestException || e instanceof IncorrectRequestMethod) {
                 System.out.println("Either the HTTP protocol was wrong or GET was not provided");
                 this.httpResponseMethod = "HTTP/1.1 400 Bad Request";
+                //this.httpResponseBody = "HTTP/1.1 400 Bad Request";
             } 
         }
 
