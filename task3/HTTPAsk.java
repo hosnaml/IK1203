@@ -37,7 +37,7 @@ public class HTTPAsk {
         return builder.toString().getBytes();
     }
 
-    public void parseHTTP(String request, int port){
+    public void parseHTTP(String request, int port) throws Exception{
         // TODO: Parse the HTTP request to extract the parameters
             // You can use the String.split() method or the URL class to do this
             // Split by space to get the URL part, remove GET and HTTP/1.1
@@ -61,11 +61,13 @@ public class HTTPAsk {
             
             if(!method.toUpperCase().equals("GET")){
                 System.out.println("HTTP/1.1 400 Bad Request");
-            
+                this.httpResponseMethod = "HTTP/1.1 400 Bad Request";
+                throw new Exception("HTTP/1.1 400 Bad Request");
             }
-            if(!version.equals("HTTP/1.1")){
+            if(!version.contains("HTTP/1.1")){
                 System.out.println("HTTP/1.1 505 HTTP Version Not Supported");
-            
+                this.httpResponseMethod = "HTTP/1.1 505 HTTP Version Not Supported";
+                throw new Exception("HTTP/1.1 505 HTTP Version Not Supported");
             }
             
             for (String param : params) {
@@ -141,7 +143,7 @@ public class HTTPAsk {
 
             this.httpResponseBody = new String(client.askServer(hostname, extPort, toServerBytes), StandardCharsets.UTF_8);
 
-            this.httpResponseMethod = "HTTP/1.1 200 OK";
+            //this.httpResponseMethod = "HTTP/1.1 200 OK";
         } 
         catch (Exception e) {
             if (e instanceof SocketTimeoutException) {
@@ -155,6 +157,7 @@ public class HTTPAsk {
                 this.httpResponseMethod = "HTTP/1.1 400 Bad Request";
             }
         }
+        //System.out.println("HTTP Response: " + this.httpResponseMethod);    
         
         BufferedWriter output = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
         PrintWriter writer = new PrintWriter(output, true);
@@ -181,7 +184,7 @@ public class HTTPAsk {
     }      // If the request is invalid, return a 400 Bad Request response with a suitable error message
     public static void main(String[] args) throws Exception {
         
-        int port = Integer.parseInt(args[0]);
+        int port = 8888; //Integer.parseInt(args[0]);
         HTTPAsk server = new HTTPAsk();
         server.run(port);
     }
