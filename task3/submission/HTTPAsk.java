@@ -41,10 +41,11 @@ public class HTTPAsk {
         // TODO: Parse the HTTP request to extract the parameters
         // You can use the String.split() method or the URL class to do this
         // Split by space to get the URL part, remove GET and HTTP/1.1
-        String line = request.split("Host:")[0];
+        String line = request.split(" ")[0];
         String[] parts = line.split(" ");
         // method is the first one.
-        method = parts[0];
+        method = parts[0].trim();
+        System.out.println("Method is" + method);
         // version is the last one
         version = parts[2];
         // The URL part is the second element
@@ -58,6 +59,9 @@ public class HTTPAsk {
         // Split the parameters by "&" to get the key-value pairs
         String[] params = parameters.split("&");
         // Now loop thrpoigh the key-value pairs and split them by "="
+
+        System.out.print("FUCK JAVA");
+        System.out.println(method.toUpperCase().equals("GET"));
 
         if (!method.toUpperCase().equals("GET")) {
             System.out.println("Received " + method + " which was not a GET request");
@@ -167,7 +171,9 @@ public class HTTPAsk {
             } else if (e instanceof BadRequestException || e instanceof IncorrectRequestMethod) {
                 System.out.println("Either the HTTP protocol was wrong or GET was not provided");
                 this.httpResponseMethod = "HTTP/1.1 400 Bad Request";
-            } 
+            } else {
+                System.out.println(e.getLocalizedMessage());
+            }
         }
 
         BufferedWriter output = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
