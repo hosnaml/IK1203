@@ -41,10 +41,10 @@ public class HTTPAsk {
         // TODO: Parse the HTTP request to extract the parameters
         // You can use the String.split() method or the URL class to do this
         // Split by space to get the URL part, remove GET and HTTP/1.1
-        String line = request.split("Host:")[0];
+        String line = request.split("\r\n")[0];
         String[] parts = line.split(" ");
         // method is the first one.
-        method = parts[0];
+        method = parts[0].trim();
         // version is the last one
         version = parts[2];
         // The URL part is the second element
@@ -123,6 +123,7 @@ public class HTTPAsk {
         String inputLine;
         while (!(inputLine = input.readLine()).isEmpty()) {
             requestBuilder.append(inputLine);
+            requestBuilder.append("\r\n"); // Add the newline character back in
         }
         String request = requestBuilder.toString();
 
@@ -139,38 +140,20 @@ public class HTTPAsk {
 
             this.httpResponseMethod = "HTTP/1.1 200 OK";
         } catch (Exception e) {
-            // if (e instanceof IllegalArgumentException
-            //         && e.getMessage().equals("HTTP/1.1 505 HTTP Version Not Supported")) {
-            //     System.out.println("Encountered SocketTimeoutException");
-            //     this.httpResponseMethod = "HTTP/1.1 505 HTTP Version Not Supported";
-            // } else if (e instanceof IllegalArgumentException
-            //         && e.getMessage().equals("HTTP/1.1 505 HTTP Version Not Supported")) {
-            //     System.out.println("");
-            //     this.httpResponseMethod = "HTTP/1.1 505 HTTP Version Not Supported";
-            // } else if (e instanceof SocketTimeoutException) {
-            //     System.out.println("Encountered SocketTimeoutException in the try-catch block");
-            //     this.httpResponseMethod = "HTTP/1.1 408 Request Timeout";
-            // } else if (e instanceof UnknownHostException) {
-            //     System.out.println("Encountered UnknownHostException");
-            //     this.httpResponseMethod = "HTTP/1.1 404 Not Found";
-            // } else {
-            //     System.out.println("Encountered in unexpected error with message: " + e.getLocalizedMessage());
-            //     this.httpResponseMethod = "HTTP/1.1 400 Bad Request";
-            // }
 
             if (e instanceof SocketTimeoutException) { 
                 System.out.println("Socket timeout occurred, sending 408");
                 this.httpResponseMethod = "HTTP/1.1 408 Request Timeout";
-                //this.httpResponseBody = "HTTP/1.1 408 Request Timeout";
             } else if (e instanceof UnknownHostException) {
                 System.out.println("Encountered UnknownHostException");
                 this.httpResponseMethod = "HTTP/1.1 404 Not Found";
-                //this.httpResponseBody = "HTTP/1.1 404 Not Found";
             } else if (e instanceof BadRequestException || e instanceof IncorrectRequestMethod) {
                 System.out.println("Either the HTTP protocol was wrong or GET was not provided");
                 this.httpResponseMethod = "HTTP/1.1 400 Bad Request";
-                //this.httpResponseBody = "HTTP/1.1 400 Bad Request";
-            } 
+            } else {
+                System.out.println("Encountered an exception: " + e.getLocalizedMessage());
+                this.httpResponseMethod = "HTTP/1.1 400 Bad Request";
+            }
         }
 
         BufferedWriter output = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
@@ -200,9 +183,9 @@ public class HTTPAsk {
 
     public static void main(String[] args) throws Exception {
 
-        // int port = Integer.parseInt(args[0]);
+        int port = Integer.parseInt(args[0]);
         HTTPAsk server = new HTTPAsk();
-        server.run(8888);
+        server.run(port);
     }
 
 }
