@@ -111,10 +111,10 @@ public class HTTPAsk {
 
         System.out.println("Connected to client");
 
-        // Create input and output streams
+        // Create input stream
         BufferedReader input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
-        System.out.println("Marko!");
+        //System.out.println("Marko!");
 
         // Read the HTTP request from the client using readLine() provided by
         // BufferedReader.
@@ -127,7 +127,7 @@ public class HTTPAsk {
         }
         String request = requestBuilder.toString();
 
-        System.out.println("Polo!");
+        //System.out.println("Polo!");
 
         clientSocket.shutdownInput();
 
