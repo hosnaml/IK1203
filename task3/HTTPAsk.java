@@ -37,128 +37,125 @@ public class HTTPAsk {
         return builder.toString().getBytes();
     }
 
-    public void parseHTTP(String request, int port) throws Exception{
+    public void parseHTTP(String request, int port) throws Exception {
         // TODO: Parse the HTTP request to extract the parameters
-            // You can use the String.split() method or the URL class to do this
-            // Split by space to get the URL part, remove GET and HTTP/1.1
-            String line = request.split("Host:")[0];
-            String[] parts = line.split(" ");
-            //method is the first one.
-            method = parts[0];
-            //version is the last one
-            version = parts[2];
-            // The URL part is the second element
-            url = parts[1];
-            // Split the URL by "?" to get the parameters
-            parts = url.split("\\?");
-            // The first part is the path
-            String path = parts[0];
-            // The second part is the parameters
-            String parameters = parts[1];
-            // Split the parameters by "&" to get the key-value pairs
-            String [] params = parameters.split("&");
-            // Now loop thrpoigh the key-value pairs and split them by "="
-            
-            if(!method.toUpperCase().equals("GET")){
-                System.out.println("HTTP/1.1 400 Bad Request");
-                this.httpResponseMethod = "HTTP/1.1 400 Bad Request";
-                throw new Exception("HTTP/1.1 400 Bad Request");
-            }
-            if(!version.contains("HTTP/1.1")){
-                System.out.println("HTTP/1.1 505 HTTP Version Not Supported");
-                this.httpResponseMethod = "HTTP/1.1 505 HTTP Version Not Supported";
-                throw new Exception("HTTP/1.1 505 HTTP Version Not Supported");
-            }
-            
-            for (String param : params) {
-                String [] keyValue = param.split("=");
-                // The first part is the key
-                String key = keyValue[0];
-                // The second part is the value
-                String value = keyValue[1];
-            }
+        // You can use the String.split() method or the URL class to do this
+        // Split by space to get the URL part, remove GET and HTTP/1.1
+        String line = request.split("\r\n")[0];
+        String[] parts = line.split(" ");
+        // method is the first one.
+        method = parts[0].trim();
+        // version is the last one
+        version = parts[2];
+        // The URL part is the second element
+        url = parts[1];
+        // Split the URL by "?" to get the parameters
+        parts = url.split("\\?");
+        // The first part is the path
+        String path = parts[0];
+        // The second part is the parameters
+        String parameters = parts[1];
+        // Split the parameters by "&" to get the key-value pairs
+        String[] params = parameters.split("&");
+        // Now loop thrpoigh the key-value pairs and split them by "="
 
-            // TODO: Validate the request (check that all required parameters are present)
-            
-
-            for (String param : params) {
-                String [] keyValue = param.split("=");
-                String key = keyValue[0];
-                String value = keyValue[1];
-                if (key.equals("hostname")) {
-                    hostname = value;
-                } else if (key.equals("port")) {
-                    extPort = Integer.parseInt(value);
-                }
-                else if (key.equals("limit")) {
-                    limit = Integer.parseInt(value);
-                }
-                else if (key.equals("shutdown")) {
-                    shutdown = Boolean.parseBoolean(value);
-                }
-                else if (key.equals("string")) {
-                    string = value;
-                    toServerBytes = maketoServerBytes(string);
-                }
-                else if (key.equals("timeout")) {
-                    timeout = Integer.parseInt(value);
-                }
-        
-            }
+        if (!method.toUpperCase().equals("GET")) {
+            System.out.println("Received " + method + " which was not a GET request");
+            //throw new IllegalArgumentException("HTTP/1.1 400 Bad Request");
+            throw new IncorrectRequestMethod();
         }
-           
-    
+        if (!version.equals("HTTP/1.1")) {
+            System.out.println("Received " + version + " which does not match required HTTP/1.1 version");
+            //throw new IllegalArgumentException("HTTP/1.1 505 HTTP Version Not Supported");
+            throw new BadRequestException();
+        }
+        for (String param : params) {
+            String[] keyValue = param.split("=");
+            // The first part is the key
+            String key = keyValue[0];
+            // The second part is the value
+            String value = keyValue[1];
+        }
+
+        // TODO: Validate the request (check that all required parameters are present)
+
+        for (String param : params) {
+            String[] keyValue = param.split("=");
+            String key = keyValue[0];
+            String value = keyValue[1];
+            if (key.equals("hostname")) {
+                hostname = value;
+            } else if (key.equals("port")) {
+                extPort = Integer.parseInt(value);
+            } else if (key.equals("limit")) {
+                limit = Integer.parseInt(value);
+            } else if (key.equals("shutdown")) {
+                shutdown = Boolean.parseBoolean(value);
+            } else if (key.equals("string")) {
+                string = value;
+                toServerBytes = maketoServerBytes(string);
+            } else if (key.equals("timeout")) {
+                timeout = Integer.parseInt(value);
+            }
+
+        }
+    }
 
     public void run(int port) throws Exception {
         // Create a ServerSocket object to listen for client requests
         ServerSocket serverSocket = new ServerSocket(port);
 
-        //System.out.println("Launching...");
+        System.out.println("Launching...");
 
         Socket clientSocket = serverSocket.accept();
 
-        //System.out.println("Connected to client");
+        System.out.println("Connected to client");
 
-        // Create input and output streams
+        // Create input stream
         BufferedReader input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-       
+
         //System.out.println("Marko!");
-         
-        // Read the HTTP request from the client using readLine() provided by BufferedReader.
+
+        // Read the HTTP request from the client using readLine() provided by
+        // BufferedReader.
         StringBuilder requestBuilder = new StringBuilder();
-        
+
         String inputLine;
         while (!(inputLine = input.readLine()).isEmpty()) {
             requestBuilder.append(inputLine);
+            requestBuilder.append("\r\n"); // Add the newline character back in
         }
         String request = requestBuilder.toString();
 
         //System.out.println("Polo!");
 
-        clientSocket.shutdownInput(); 
-        
-        try{
+        clientSocket.shutdownInput();
+
+        try {
             parseHTTP(request, port);
-            TCPClient client = new TCPClient(shutdown, timeout,limit);
+            TCPClient client = new TCPClient(shutdown, timeout, limit);
 
-            this.httpResponseBody = new String(client.askServer(hostname, extPort, toServerBytes), StandardCharsets.UTF_8);
+            this.httpResponseBody = new String(client.askServer(hostname, extPort, toServerBytes),
+                    StandardCharsets.UTF_8);
 
-            //this.httpResponseMethod = "HTTP/1.1 200 OK";
-        } 
-        catch (Exception e) {
-            if (e instanceof SocketTimeoutException) {
-                System.out.println("Encountered SocketTimeoutException");
+            this.httpResponseMethod = "HTTP/1.1 200 OK";
+        } catch (Exception e) {
+
+            if (e instanceof SocketTimeoutException) { 
+                System.out.println("Socket timeout occurred, sending 408");
                 this.httpResponseMethod = "HTTP/1.1 408 Request Timeout";
             } else if (e instanceof UnknownHostException) {
                 System.out.println("Encountered UnknownHostException");
                 this.httpResponseMethod = "HTTP/1.1 404 Not Found";
+            } else if (e instanceof BadRequestException || e instanceof IncorrectRequestMethod) {
+                System.out.println("Either the HTTP protocol was wrong or GET was not provided");
+                this.httpResponseMethod = "HTTP/1.1 400 Bad Request";
             } else {
-                System.out.println("Encountered in unexpected error with message: " + e.getLocalizedMessage());
+                System.out.println("Encountered an exception: " + e.getLocalizedMessage());
                 this.httpResponseMethod = "HTTP/1.1 400 Bad Request";
             }
         }
-        //System.out.println("HTTP Response: " + this.httpResponseMethod);    
-        
+
         BufferedWriter output = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
         PrintWriter writer = new PrintWriter(output, true);
 
@@ -166,28 +163,29 @@ public class HTTPAsk {
         String httpDate = formatter.format(ZonedDateTime.now(ZoneOffset.UTC));
 
         String httpResponseMessage = String.format(
-                                    """
-                                    %s
-                                    Server: Prolog prolog prolog
-                                    Content-Type: text/plain; charset=utf-8;
-                                    Date: %s
-                                    Keep-Alive: timeout=5, max=1000
-                                    Connection: Keep-Alive
+                """
+                        %s
+                        Server: Prolog prolog prolog
+                        Content-Type: text/plain; charset=utf-8;
+                        Date: %s
+                        Keep-Alive: timeout=5, max=1000
+                        Connection: Keep-Alive
 
-                                    %s
-                                    """, httpResponseMethod, httpDate, httpResponseBody);
+                        %s
+                        """, httpResponseMethod, httpDate, httpResponseBody);
 
-            writer.println(httpResponseMessage);
-            clientSocket.shutdownOutput();
-            serverSocket.close();
-    
-    }      // If the request is invalid, return a 400 Bad Request response with a suitable error message
+        writer.println(httpResponseMessage);
+        clientSocket.shutdownOutput();
+        serverSocket.close();
+
+    } // If the request is invalid, return a 400 Bad Request response with a suitable
+      // error message
+
     public static void main(String[] args) throws Exception {
-        
-        int port = 8888; //Integer.parseInt(args[0]);
+
+        int port = Integer.parseInt(args[0]);
         HTTPAsk server = new HTTPAsk();
         server.run(port);
     }
-    
-}
 
+}

@@ -1,14 +1,20 @@
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.net.*;
-import java.nio.Buffer;
 import java.nio.charset.StandardCharsets;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-
+import java.nio.Buffer;
 import java.io.*;
 
-public class HTTPAsk {
+public class MyRunnable implements Runnable{
 
+    private Socket clientSocket;
+    private int port;
     String version = null;
     String url = null;
     String method = null;
@@ -22,7 +28,12 @@ public class HTTPAsk {
     String httpResponseMethod = "HTTP/1.1 200 OK";
     String httpResponseBody = "";
 
-    public static byte[] maketoServerBytes(String... args) {
+    public MyRunnable(Socket clientSocket, int port){
+        this.clientSocket = clientSocket;
+        this.port = port;
+    }
+
+    public static byte[] maketoServerBytes(String ...args) {
         StringBuilder builder = new StringBuilder();
         boolean first = true;
         for (String arg : args) {
@@ -36,6 +47,8 @@ public class HTTPAsk {
         builder.append("\n");
         return builder.toString().getBytes();
     }
+    
+    
 
     public void parseHTTP(String request, int port) throws Exception {
         // TODO: Parse the HTTP request to extract the parameters
@@ -59,6 +72,10 @@ public class HTTPAsk {
         String[] params = parameters.split("&");
         // Now loop thrpoigh the key-value pairs and split them by "="
 
+        if(!request.toLowerCase().contains("ask")){
+            System.out.println("System resource not found");
+            throw new BadRequestException();
+        }
         if (!method.toUpperCase().equals("GET")) {
             System.out.println("Received " + method + " which was not a GET request");
             //throw new IllegalArgumentException("HTTP/1.1 400 Bad Request");
@@ -99,39 +116,33 @@ public class HTTPAsk {
             }
 
         }
+
     }
 
-    public void run(int port) throws Exception {
-        // Create a ServerSocket object to listen for client requests
-        ServerSocket serverSocket = new ServerSocket(port);
-
-        System.out.println("Launching...");
-
-        Socket clientSocket = serverSocket.accept();
-
-        System.out.println("Connected to client");
-
-        // Create input stream
-        BufferedReader input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-
-        //System.out.println("Marko!");
-
-        // Read the HTTP request from the client using readLine() provided by
-        // BufferedReader.
-        StringBuilder requestBuilder = new StringBuilder();
-
-        String inputLine;
-        while (!(inputLine = input.readLine()).isEmpty()) {
-            requestBuilder.append(inputLine);
-            requestBuilder.append("\r\n"); // Add the newline character back in
-        }
-        String request = requestBuilder.toString();
-
-        //System.out.println("Polo!");
-
-        clientSocket.shutdownInput();
+    public void run() throws RuntimeException{
 
         try {
+            // Create input stream
+            BufferedReader input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+
+            //System.out.println("Marko!");
+
+            // Read the HTTP request from the client using readLine() provided by
+            // BufferedReader.
+            StringBuilder requestBuilder = new StringBuilder();
+
+            String inputLine;
+            while (!(inputLine = input.readLine()).isEmpty()) {
+                requestBuilder.append(inputLine);
+                requestBuilder.append("\r\n"); // Add the newline character back in
+            }
+            String request = requestBuilder.toString();
+
+            //System.out.println("Polo!");
+
+            clientSocket.shutdownInput();
+
+        
             parseHTTP(request, port);
             TCPClient client = new TCPClient(shutdown, timeout, limit);
 
@@ -156,36 +167,32 @@ public class HTTPAsk {
             }
         }
 
-        BufferedWriter output = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
-        PrintWriter writer = new PrintWriter(output, true);
+        try{BufferedWriter output = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+            PrintWriter writer = new PrintWriter(output, true);
+    
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss O");
+            String httpDate = formatter.format(ZonedDateTime.now(ZoneOffset.UTC));
+    
+            String httpResponseMessage = String.format(
+                    """
+                            %s
+                            Server: Prolog prolog prolog
+                            Content-Type: text/plain; charset=utf-8;
+                            Date: %s
+                            Keep-Alive: timeout=5, max=1000
+                            Connection: Keep-Alive
+    
+                            %s
+                            """, httpResponseMethod, httpDate, httpResponseBody);
+    
+            writer.println(httpResponseMessage);
+            clientSocket.shutdownOutput();}
+        catch(Exception e){
+            e.printStackTrace();
+        }
+        //serverSocket.close();
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss O");
-        String httpDate = formatter.format(ZonedDateTime.now(ZoneOffset.UTC));
+}
 
-        String httpResponseMessage = String.format(
-                """
-                        %s
-                        Server: Prolog prolog prolog
-                        Content-Type: text/plain; charset=utf-8;
-                        Date: %s
-                        Keep-Alive: timeout=5, max=1000
-                        Connection: Keep-Alive
-
-                        %s
-                        """, httpResponseMethod, httpDate, httpResponseBody);
-
-        writer.println(httpResponseMessage);
-        clientSocket.shutdownOutput();
-        serverSocket.close();
-
-    } // If the request is invalid, return a 400 Bad Request response with a suitable
-      // error message
-
-    public static void main(String[] args) throws Exception {
-
-        int port = Integer.parseInt(args[0]);
-        HTTPAsk server = new HTTPAsk();
-        server.run(port);
-    }
-
+    
 }

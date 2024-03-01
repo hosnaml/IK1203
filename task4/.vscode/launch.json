@@ -12,10 +12,10 @@
         },
         {
             "type": "java",
-            "name": "HTTPAsk",
+            "name": "ConcHTTPAsk",
             "request": "launch",
-            "mainClass": "HTTPAsk",
-            "projectName": "submission_42e1c6fa"
+            "mainClass": "ConcHTTPAsk",
+            "projectName": "task4_5e5f3722"
         }
     ]
 }
