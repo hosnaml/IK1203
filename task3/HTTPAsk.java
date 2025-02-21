@@ -59,6 +59,10 @@ public class HTTPAsk {
         String[] params = parameters.split("&");
         // Now loop thrpoigh the key-value pairs and split them by "="
 
+        if(!request.toLowerCase().contains("ask")){
+            System.out.println("System resource not found");
+            throw new BadRequestException();
+        }
         if (!method.toUpperCase().equals("GET")) {
             System.out.println("Received " + method + " which was not a GET request");
             //throw new IllegalArgumentException("HTTP/1.1 400 Bad Request");

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="b1e48b41-e4dd-47c0-b2f6-53fecba24c31" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.name" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.vscode/launch.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/BadRequestException.class" beforeDir="false" afterPath="$PROJECT_DIR$/BadRequestException.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HTTPAsk.class" beforeDir="false" afterPath="$PROJECT_DIR$/HTTPAsk.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HTTPAsk.java" beforeDir="false" afterPath="$PROJECT_DIR$/HTTPAsk.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/IncorrectRequestMethod.class" beforeDir="false" afterPath="$PROJECT_DIR$/IncorrectRequestMethod.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TCPClient.class" beforeDir="false" afterPath="$PROJECT_DIR$/TCPClient.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/task3.zip" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../task4/.vscode/launch.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../task4/ConcHTTPAsk.class" beforeDir="false" afterPath="$PROJECT_DIR$/../task4/ConcHTTPAsk.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../task4/MyRunnable.class" beforeDir="false" afterPath="$PROJECT_DIR$/../task4/MyRunnable.class" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ProjectId" id="2fGyfvgR3PEuADPHvB65IQFB8vs" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "settings.editor.selected.configurable": "reference.settings.ide.settings.new.ui"
+  }
+}]]></component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="b1e48b41-e4dd-47c0-b2f6-53fecba24c31" name="Changes" comment="" />
+      <created>1713441818514</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1713441818514</updated>
+    </task>
+    <servers />
+  </component>
+</project>
